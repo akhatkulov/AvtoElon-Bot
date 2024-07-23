@@ -11,6 +11,7 @@ from helpers.others import step_msg,steps
 bot = TeleBot(token="5790375885:AAHKyTQ6T7vbPuYVAijxCMtdXm1_bFHRmno")
 telegraph = Telegraph()
 rek_text = " "
+admin = " "
 # Create a Telegraph account
 response = telegraph.create_account(short_name='my_bot')
 access_token = response['access_token']
@@ -35,7 +36,17 @@ def get_ads(call):
         bot.send_message(chat_id=call.message.chat.id, text="Mashinaning 4ta rasmini yuboring")
         put_step(cid=call.message.chat.id, step="get_photos")
         user_images[call.message.chat.id] = []
-
+    elif call.data == "yes_post":
+        bot.send_message(chat_id=call.message.chat.id,text="Sizning so'rovingiz adminga yuborildi. Javobini tez orada bilib olasiz")
+        bot.copy_message(chat_id=admin,from_chat_id=call.message.chat.id,message_id=call.message.id,caption=call.message.caption)
+        bot.send_message(chat_id=admin,text="...",reply_to_message_id=call.message.id,reply_markup=admin_yes_no())
+    elif call.data == "no_post":
+        bot.send_message(chat_id=call.message.chad.id,text="Bekor qilindi")
+    elif call.data == "yes_admin":
+        print("tasdiq!")
+    elif call.data == "no_admin":
+        print("Inkor")
+        
 @bot.message_handler(content_types=['photo', 'text'])
 def main_funks(msg: types.Message):
     text = msg.text
@@ -112,7 +123,7 @@ Masalan:</b> <i>(Spark 2-pozitsiya sotiladi)</i>""", parse_mode="html")
 
 📍Manzil: {manzil}</b>
 
-📞Nomer: {nomer}
+📞Nomer: {nomer}</i>
 
 {rek_text}
 """

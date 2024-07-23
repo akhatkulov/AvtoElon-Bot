@@ -14,7 +14,7 @@ def ads_yes_no():
     btn1 = InlineKeyboardButton(text="Ha✅",callback_data="yes_ads")
     btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data="no_ads")
     x.add(btn1,btn2)
-    return 
+    return x
 
 def post_yes_no():
     x = InlineKeyboardMarkup(row_width=2)
