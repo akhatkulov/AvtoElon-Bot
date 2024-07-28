@@ -16,16 +16,16 @@ def ads_yes_no():
     x.add(btn1,btn2)
     return x
 
-def post_yes_no():
+def post_yes_no(uid):
     x = InlineKeyboardMarkup(row_width=2)
-    btn1 = InlineKeyboardButton(text='Ha✅',callback_data="post_yes")
-    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data="post_no")
+    btn1 = InlineKeyboardButton(text='Ha✅',callback_data=f"yes_post-{uid}")
+    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data=f"no_post-{uid}")
     x.add(btn1,btn2)
     return x
 
-def admin_yes_no():
+def admin_yes_no(uid,cid):
     x = InlineKeyboardMarkup(row_width=2)
-    btn1 = InlineKeyboardButton(text="Ha✅",callback_data="yes_admin")
-    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data="no_admin")
+    btn1 = InlineKeyboardButton(text="Ha✅",callback_data=f"yes_admin-{uid}-{cid}")
+    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data=f"no_admin-{uid}-{cid}")
     x.add(btn1,btn2)
     return x

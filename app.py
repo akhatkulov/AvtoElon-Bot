@@ -3,15 +3,16 @@ from PIL import Image
 from io import BytesIO
 import json
 from telegraph import Telegraph
-
+from uuid import uuid4
 from helpers.buttons import home_menu, ads_yes_no,post_yes_no,admin_yes_no
-from helpers.alch import create_user, put_step, get_step,change_info,get_info
+from helpers.alch import create_user, put_step, get_step,change_info,get_info,create_post,get_post
 from helpers.others import step_msg,steps
 
-bot = TeleBot(token="5790375885:AAHKyTQ6T7vbPuYVAijxCMtdXm1_bFHRmno")
+bot = TeleBot(token="7341901661:AAGzpQJ676lgtVQ60ncKQdafh3lzcNvz1D4")
 telegraph = Telegraph()
 rek_text = " "
-admin = " "
+admin = 789945598
+channel_id = -1001977042344
 # Create a Telegraph account
 response = telegraph.create_account(short_name='my_bot')
 access_token = response['access_token']
@@ -29,6 +30,11 @@ def home(msg: types.Message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def get_ads(call):
+    call_msg = call.message
+    chat_id = call_msg.chat.id
+    rply = call_msg.reply_to_message
+    rply_id = rply.message_id if rply else None
+
     if call.data == "put_ads":
         print("-----")
         bot.send_message(chat_id=call.message.chat.id, text="E'lon joylamoqchimisiz?", reply_markup=ads_yes_no())
@@ -36,16 +42,28 @@ def get_ads(call):
         bot.send_message(chat_id=call.message.chat.id, text="Mashinaning 4ta rasmini yuboring")
         put_step(cid=call.message.chat.id, step="get_photos")
         user_images[call.message.chat.id] = []
-    elif call.data == "yes_post":
+    elif "yes_post" in call.data:
+        post_id = call.data.split("-")[1]
+        post = get_post(uid=post_id)
+        pictures = json.loads(post['pic'])
+        media = [types.InputMediaPhoto(media=pic_url, caption=post['info'] if i == 0 else '', parse_mode='HTML') for i, pic_url in enumerate(pictures)]
+        target = bot.send_media_group(chat_id=admin, media=media)
         bot.send_message(chat_id=call.message.chat.id,text="Sizning so'rovingiz adminga yuborildi. Javobini tez orada bilib olasiz")
-        bot.copy_message(chat_id=admin,from_chat_id=call.message.chat.id,message_id=call.message.id,caption=call.message.caption)
-        bot.send_message(chat_id=admin,text="...",reply_to_message_id=call.message.id,reply_markup=admin_yes_no())
-    elif call.data == "no_post":
+        bot.send_message(chat_id=admin,text="...",reply_to_message_id=target.message_id,reply_markup=admin_yes_no(uid=post_id,cid=call.message.chat.id))
+    elif "no_post" in call.data:
         bot.send_message(chat_id=call.message.chad.id,text="Bekor qilindi")
-    elif call.data == "yes_admin":
-        print("tasdiq!")
-    elif call.data == "no_admin":
-        print("Inkor")
+    elif "yes_admin" in call.data:
+        post_id = call.data.split("-")[1]
+        client_cid = call.data.split("-")[2]
+        post = get_post(uid=post_id)
+        pictures = json.loads(post['pic'])
+        media = [types.InputMediaPhoto(media=pic_url, caption=post['info'] if i == 0 else '', parse_mode='HTML') for i, pic_url in enumerate(pictures)]
+        target = bot.send_media_group(chat_id=channel_id, media=media)
+        bot.send_message(chat_id=call.message.chat.id,text="Kanalga yuborildi")
+        bot.send_message(chat_id=client_cid,text="Postingiz kanalga joylandi!")
+    elif "no_admin" in call.data:
+        bot.send_message(chat_id=call.message.chat.id,text="Bekor qilindi")
+        bot.send_message(chat_id=client_cid,text="So'rovingiz bekor qilindi")
         
 @bot.message_handler(content_types=['photo', 'text'])
 def main_funks(msg: types.Message):
@@ -128,8 +146,11 @@ Masalan:</b> <i>(Spark 2-pozitsiya sotiladi)</i>""", parse_mode="html")
 {rek_text}
 """
         media = [types.InputMediaPhoto(media=pic_url, caption=text_info if i == 0 else '', parse_mode='HTML') for i, pic_url in enumerate(rasm)]
-        bot.send_media_group(chat_id=cid, media=media)
-        bot.send_message(chat_id=cid,text="Ushbu anketa to'grimi?",reply_markup=post_yes_no())
+        target = bot.send_media_group(chat_id=cid, media=media)
+        uid = uuid4()
+        create_post(uid=uid,pic=x['pic'],info=text_info)
+        bot.send_message(chat_id=cid,text="Ushbu anketa to'grimi?",reply_to_message_id=target[0].message_id,reply_markup=post_yes_no(uid=uid))
+        
         
     elif step in steps:
         change_info(cid=cid, type_info=step, value=text)

@@ -26,6 +26,12 @@ class Step(Base):
     phone = Column(VARCHAR(100),default="+998")
     location = Column(VARCHAR(100),default="samarqand")
 
+class Posts(Base):
+    __tablename__ = 'posts_avtosalon'
+    id = Column(Integer, primary_key = True, autoincrement=True)
+    uid = Column(VARCHAR(100))
+    info = Column(String)
+    pic = Column(String) 
 class Channels(Base):
     __tablename__ = 'channels_avtosalon'
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -35,6 +41,25 @@ Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
+
+def create_post(uid,pic,info):
+    try:
+        x = Posts(uid=str(uid),pic=pic,info=info)
+        session.add(x)
+        session.commit()
+    except SQLAlchemyError as e:
+        session.rollback()
+        print(f"Error: {e}")
+    finally:
+        session.close()
+
+def get_post(uid):
+    try:
+        x = session.query(Posts).filter_by(uid=str(uid)).first()
+        res = {"uid":x.uid,"pic":x.pic,"info":x.info}
+        return res
+    finally:
+        session.close()
 
 def get_all_user():
     try:
