@@ -4,19 +4,18 @@ from io import BytesIO
 import json
 from telegraph import Telegraph
 from uuid import uuid4
-from helpers.buttons import home_menu, ads_yes_no,post_yes_no,admin_yes_no
+from helpers.buttons import home_menu, ads_yes_no,post_yes_no,admin_yes_no,skip,keyboard_rm
 from helpers.alch import create_user, put_step, get_step,change_info,get_info,create_post,get_post
 from helpers.others import step_msg,steps
 
-bot = TeleBot(token="7341901661:AAGzpQJ676lgtVQ60ncKQdafh3lzcNvz1D4")
+bot = TeleBot(token="BOT_TOKEN") #bot token
 telegraph = Telegraph()
-rek_text = " "
-admin = 789945598
-channel_id = -1001977042344
-# Create a Telegraph account
+rek_text = " " #reklama matni
+admin = 789945598 #admin id
+channel_id = -1001977042344 #post channel id
+
 response = telegraph.create_account(short_name='my_bot')
 access_token = response['access_token']
-# A dictionary to store user-specific image paths
 user_images = {}
 
 @bot.message_handler(commands=['start'])
@@ -39,29 +38,33 @@ def get_ads(call):
         print("-----")
         bot.send_message(chat_id=call.message.chat.id, text="E'lon joylamoqchimisiz?", reply_markup=ads_yes_no())
     elif call.data == "yes_ads":
-        bot.send_message(chat_id=call.message.chat.id, text="Mashinaning 4ta rasmini yuboring")
+        bot.send_message(chat_id=call.message.chat.id, text="<b>Avtomobilning 1-4 tagacha rasmini yuboring!\nRasmlarni yuborib bo'lgandan keyin quyidagi Tasdiqlash ✅ tugmasini bosing.\nEslatma:</b> <i>Har qanday rasm bo'lmagan kontent uchun e'lon berish to'xtatiladi!</i>",parse_mode="html",reply_markup=skip())
         put_step(cid=call.message.chat.id, step="get_photos")
         user_images[call.message.chat.id] = []
-    elif "yes_post" in call.data:
-        post_id = call.data.split("-")[1]
+    elif "yes-post" in call.data:
+        post_id = call.data.split("_")[1]
+        print(post_id)
         post = get_post(uid=post_id)
-        pictures = json.loads(post['pic'])
+        print(post)
+        print(type(post))
+        pictures = post["pic"]
+        print(type(pictures))
         media = [types.InputMediaPhoto(media=pic_url, caption=post['info'] if i == 0 else '', parse_mode='HTML') for i, pic_url in enumerate(pictures)]
         target = bot.send_media_group(chat_id=admin, media=media)
         bot.send_message(chat_id=call.message.chat.id,text="Sizning so'rovingiz adminga yuborildi. Javobini tez orada bilib olasiz")
-        bot.send_message(chat_id=admin,text="...",reply_to_message_id=target.message_id,reply_markup=admin_yes_no(uid=post_id,cid=call.message.chat.id))
-    elif "no_post" in call.data:
+        bot.send_message(chat_id=admin,text="...",reply_to_message_id=target[0].message_id,reply_markup=admin_yes_no(uid=post_id,cid=call.message.chat.id))
+    elif "no-post" in call.data:
         bot.send_message(chat_id=call.message.chad.id,text="Bekor qilindi")
-    elif "yes_admin" in call.data:
-        post_id = call.data.split("-")[1]
-        client_cid = call.data.split("-")[2]
+    elif "yes-admin" in call.data:
+        post_id = call.data.split("_")[1]
+        client_cid = call.data.split("_")[2]
         post = get_post(uid=post_id)
-        pictures = json.loads(post['pic'])
+        pictures = post["pic"]
         media = [types.InputMediaPhoto(media=pic_url, caption=post['info'] if i == 0 else '', parse_mode='HTML') for i, pic_url in enumerate(pictures)]
         target = bot.send_media_group(chat_id=channel_id, media=media)
         bot.send_message(chat_id=call.message.chat.id,text="Kanalga yuborildi")
         bot.send_message(chat_id=client_cid,text="Postingiz kanalga joylandi!")
-    elif "no_admin" in call.data:
+    elif "no-admin" in call.data:
         bot.send_message(chat_id=call.message.chat.id,text="Bekor qilindi")
         bot.send_message(chat_id=client_cid,text="So'rovingiz bekor qilindi")
         
@@ -75,44 +78,45 @@ def main_funks(msg: types.Message):
         if cid not in user_images:
             user_images[cid] = []
 
-        if msg.photo:
+        if msg.photo or msg.text:
             try:
-                # Get file info and download the photo
-                file_info = bot.get_file(msg.photo[-1].file_id)
-                file = bot.download_file(file_info.file_path)
-                image = Image.open(BytesIO(file))
+                try:
+                    file_info = bot.get_file(msg.photo[-1].file_id)
+                    file = bot.download_file(file_info.file_path)
+                    image = Image.open(BytesIO(file))
 
-                # Convert the image to bytes
-                byte_io = BytesIO()
-                image.save(byte_io, format='JPEG')
-                byte_io.seek(0)
-                photo_bytes = byte_io.read()
+                    # Convert the image to bytes
+                    byte_io = BytesIO()
+                    image.save(byte_io, format='JPEG')
+                    byte_io.seek(0)
+                    photo_bytes = byte_io.read()
 
-                # Upload the image to Telegraph
-                with open('temp.jpg', 'wb') as temp_file:
-                    temp_file.write(photo_bytes)
+                    # Upload the image to Telegraph
+                    with open('temp.jpg', 'wb') as temp_file:
+                        temp_file.write(photo_bytes)
 
-                response = telegraph.upload_file('temp.jpg')
-                image_url = 'https://telegra.ph/' + response[0]['src']
-                print(image_url)
+                    response = telegraph.upload_file('temp.jpg')
+                    image_url = 'https://telegra.ph/' + response[0]['src']
+                    print(image_url)
 
-                # Save the image URL
-                user_images[cid].append(image_url)
-
+                    # Save the image URL
+                    user_images[cid].append(image_url)
+                except:
+                    print("Bu rasm emas")
                 # Check if 4 images are collected
-                if len(user_images[cid]) == 4 or msg.text == "STOP":
-                    img_x = json.dumps(user_images[cid])
-                    print(img_x)
-                    change_info(cid=cid, type_info="pic", value=img_x)
-                    bot.send_message(chat_id=msg.chat.id, text="""<b>Rasmlarni yuklash yakunlandi!
-Avtomobile modelini yuboring!
-Masalan:</b> <i>(Spark 2-pozitsiya sotiladi)</i>""", parse_mode="html")
-                    put_step(cid=msg.chat.id, step="name")
-                    user_images[cid] = []  # Reset the list after sending
+                if len(user_images[cid]) == 4 or msg.text == "Tasdiqlash ✅":
+                    if len(user_images[cid]) != 0:
+                        img_x = json.dumps(user_images[cid])
+
+                        change_info(cid=cid, type_info="pic", value=img_x)
+                        bot.send_message(chat_id=msg.chat.id, text="<b>Rasmlarni yuklash yakunlandi!\nAvtomobile modelini yuboring!\nMasalan:</b> <i>(Spark 2-pozitsiya sotiladi)</i>", parse_mode="html",reply_markup=keyboard_rm())
+                        put_step(cid=msg.chat.id, step="name")
+                        user_images[cid] = []  # Reset the list after sending
+                    else:
+                        bot.send_message(chat_id=cid,text="Siz rasm yubormadingiz, bu esa mumkin emas avval rasm yuborib keyin Tasdiqlash ✅ tugmasini bosing!")
 
             except Exception as e:
-                print(f"Error: {e}")
-    print(step)
+                print(f"Error: {e}")    
     if step == "km":
 
         main_info = get_info(cid=cid)

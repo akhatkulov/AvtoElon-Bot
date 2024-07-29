@@ -1,4 +1,4 @@
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton,ReplyKeyboardMarkup,KeyboardButton,ReplyKeyboardRemove
 
 def home_menu():
     x = InlineKeyboardMarkup(row_width=2)
@@ -18,14 +18,24 @@ def ads_yes_no():
 
 def post_yes_no(uid):
     x = InlineKeyboardMarkup(row_width=2)
-    btn1 = InlineKeyboardButton(text='Ha✅',callback_data=f"yes_post-{uid}")
-    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data=f"no_post-{uid}")
+    btn1 = InlineKeyboardButton(text='Ha✅',callback_data=f"yes-post_{uid}")
+    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data=f"no-post_{uid}")
     x.add(btn1,btn2)
     return x
 
 def admin_yes_no(uid,cid):
     x = InlineKeyboardMarkup(row_width=2)
-    btn1 = InlineKeyboardButton(text="Ha✅",callback_data=f"yes_admin-{uid}-{cid}")
-    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data=f"no_admin-{uid}-{cid}")
+    btn1 = InlineKeyboardButton(text="Ha✅",callback_data=f"yes-admin_{uid}_{cid}")
+    btn2 = InlineKeyboardButton(text="Yo'q❌",callback_data=f"no-admin_{uid}_{cid}")
     x.add(btn1,btn2)
     return x
+
+def skip():
+    x = ReplyKeyboardMarkup(row_width=1,resize_keyboard=True)
+    btn1 = KeyboardButton("Tasdiqlash ✅")
+    x.add(btn1)
+    return x
+
+def keyboard_rm():
+    markup = ReplyKeyboardRemove()
+    return markup
